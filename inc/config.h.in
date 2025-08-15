@@ -1,0 +1,2 @@
+#define prog_VERSION_MAJOR @prog_VERSION_MAJOR@
+#define prog_VERSION_MINOR @prog_VERSION_MINOR@
