@@ -1,19 +1,5 @@
 #include "render_tls/render.hpp"
 
-void clear_log()
-{
-    std::ofstream fout;
-    fout.open(LOGFILE, std::ios::trunc);
-    fout.close();
-}
-void save_log(std::string msg)
-{
-    std::ofstream fout;
-    fout.open(LOGFILE, std::ios::app);
-    fout << msg << std::endl;
-    fout.close();
-}
-
 std::wstring s2ws(const std::string& str)
 {
     using convert_typeX = std::codecvt_utf8<wchar_t>;

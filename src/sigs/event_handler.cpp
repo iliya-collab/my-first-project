@@ -115,7 +115,6 @@ void EventHandler::extract_sig()
     if (!q_sig.empty())
     {
         locker.lock();
-        save_log("Extract : " + std::to_string(q_sig.front()));
         int ret_sig = table_proc[q_sig.front()](user_data);
         if (ret_sig == SIGS::END_SIGS)
             q_sig.pop();

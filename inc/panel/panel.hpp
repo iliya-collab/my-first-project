@@ -1,6 +1,7 @@
 #ifndef _PANEL_
 #define _PANEL_
 #include "render_tls/render.hpp"
+#include "logs.hpp"
 #include <string>
 #include <vector>
 
@@ -34,13 +35,13 @@ public:
         id_panel++;
     }
 
-    Panel(const Panel& other) {
+    /*Panel(const Panel& other) {
         this->id = other.id;
         this->pos_panel = other.pos_panel;
         this->class_name = other.class_name;
         this->nbuf = other.nbuf;
         this->err = other.err;
-    }
+    }*/
 
     posPanel get_panel() { return pos_panel; }
     void set_panel(posPanel pos_panel) { this->pos_panel = pos_panel; }
@@ -58,13 +59,14 @@ public:
     Error get_last_error() { return err; }
 
     bool operator == (const Panel& pl) const { return id == pl.id; }
-    Panel& operator = (const Panel& pl) {
+    
+    /*Panel& operator = (const Panel& pl) {
         this->id = pl.id;
         this->pos_panel = pl.pos_panel;
         this->class_name = pl.class_name;
         this->err = pl.err;
-        return *this;   // возвращаем ссылку на текущий объект
-    }
+        return *this;
+    }*/
     
     short nbuf = 0;
 

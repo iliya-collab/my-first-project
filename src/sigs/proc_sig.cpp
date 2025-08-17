@@ -16,28 +16,20 @@ int proc_sig_error(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
     int ret_sig = SIGS::END_SIGS;
-    clear();
-
     while (!ptr_app->q_err.empty())
     {
         if (ptr_app->q_err.front().code < 0)
         {
-            printw("Error : %s\n", ptr_app->q_err.front().msg.c_str());
+            save_log("Error : " + ptr_app->q_err.front().msg);
             ret_sig = SIGS::SIG_EXIT;
         }
         if (ptr_app->q_err.front().code > 0)
         {
-            printw("Warning : %s\n", ptr_app->q_err.front().msg.c_str());
+            save_log("Warning : " + ptr_app->q_err.front().msg);
             ret_sig = SIGS::END_SIGS;
         }
         ptr_app->q_err.pop();
     }
-
-    printw("Press any key... ");
-    refresh();
-    timeout(-1);
-    getch();
-    timeout(0);
     return ret_sig;
 }
 
@@ -235,6 +227,7 @@ int proc_sig_hor_separation(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
     sep_hor(ptr_app);
+    updates_buf_panels(ptr_app);
     recalc_bufs(ptr_app);
     return SIGS::END_SIGS;
 }
@@ -243,6 +236,7 @@ int proc_sig_ver_separation(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
     sep_ver(ptr_app);
+    updates_buf_panels(ptr_app);
     recalc_bufs(ptr_app);
     return SIGS::END_SIGS;
 }
@@ -250,5 +244,9 @@ int proc_sig_ver_separation(void* user_data)
 int proc_sig_close_panel(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
+    auto parent = ptr_app->tree_panels.find_parent(ptr_app->buf_panels[ptr_app->active_panel]);
+    ptr_app->tree_panels.remove_childs(parent);
+    updates_buf_panels(ptr_app);
+    recalc_bufs(ptr_app);
     return SIGS::END_SIGS;
 }

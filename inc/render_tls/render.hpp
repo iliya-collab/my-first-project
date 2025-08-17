@@ -5,7 +5,6 @@
 #include <curses.h>
 #include <string>
 #include <math.h>
-#include <fstream>
 #include <cstring>
 #include <locale>
 #include <codecvt>
@@ -15,10 +14,6 @@ std::string ws2s(const std::wstring& wstr);
 
 #define STWS(str) s2ws((str))
 #define WSST(wstr) ws2s((wstr))
-
-#define LOGFILE "../logs.txt"
-void clear_log();
-void save_log(std::string msg);
 
 
 typedef struct {

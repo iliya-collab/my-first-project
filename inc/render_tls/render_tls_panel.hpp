@@ -19,6 +19,8 @@ void sep_hor(AppState* ptr_app);
 
 void recalc_bufs(AppState* ptr_app);
 
+void updates_buf_panels(AppState* ptr_app);
+
 /*void render_dirs(yx pos, FSPanel fspanel);
 void render_fspanel(FSPanel fspanel);
 

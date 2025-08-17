@@ -11,8 +11,7 @@ EventHandler ev_hndr;
 
 AppState app = {};
 
-int init_curses()
-{
+int init_curses() {
     setlocale(LC_ALL, "");
     initscr();
     cbreak();
@@ -34,50 +33,53 @@ int init_curses()
     return 0;
 }
 
-void init_prog(int argc, char* argv[])
-{
-    clear();
-    printw("Program Initialization\n");
-    printw("----------------------------------------------------------\n");
+void init_theme() {
+    init_pair(COLOR_PAIR_TEXT,      75, 0);
+	init_pair(COLOR_PAIR_FRAME,     81, 0);
+	init_pair(COLOR_PAIR_CURSOR,    190, 0);
+	init_pair(COLOR_PAIR_ACT_PANEL, 31, 0);
+	init_pair(COLOR_PAIR_ICON,      184, 0);
+}
 
+void init_prog(int argc, char* argv[]) {
     if (argc < 2)
         app.q_err.push({ .code = -1, .msg = "To run the program, you need to pass the parameters" });
     app.active_panel = 0;
-
+    
     Panel root_panel;
     root_panel.set_panel( {{0,0}, {app.screen_height, app.screen_width}} );
     app.cursor = { root_panel.get_panel().spos.y+1, root_panel.get_panel().spos.x+1 };
-
+    
     app.tree_panels.set_root(root_panel);
     app.count_panels = app.tree_panels.get_count();
     app.tree_panels.get_root()->pl.nbuf = 0;
-    app.tree_panels.get_child(app.buf_panels);
-    
-    //calc_size_panel(&app);
-    printw("Screen size     : %d:%d\n", app.screen_height, app.screen_width);
-    printw("Cursor          : %d:%d\n", app.cursor.y, app.cursor.x);
-    printw("Count panels    : %d\n", app.count_panels);
-    printw("Active panel    : %d\n", app.active_panel);
-    printw("----------------------------------------------------------\n\n");
-    
-    /*printw("All Panels\n");
-    for (auto next_panel = app.buf_panels.begin(); next_panel != app.buf_panels.end(); next_panel++)
-    printw("ID panel : %d   Class name : %s   Position : %d:%d %d:%d\n", 
-        (*next_panel).get_id(),
-        (*next_panel).get_class_name().c_str(),
-        (*next_panel).get_panel().spos.y, (*next_panel).get_panel().spos.x, 
-        (*next_panel).get_panel().spos.y+(*next_panel).get_panel().size.y, 
-        (*next_panel).get_panel().spos.x+(*next_panel).get_panel().size.x
-    );
-    printw("----------------------------------------------------------\n\n");*/
-    
-    printw("Press any key or [q] to exit...");
-    refresh();
-    if (getch() == 'q') 
-        ev_hndr.send_sig(SIGS::SIG_EXIT);
-    clear();
+    app.tree_panels.get_childs(app.buf_panels);
     move(app.cursor.y, app.cursor.x);
+    
+    clear_log();
+    save_log("Program Initialization");
+    save_log("----------------------------------------------------------");
+    save_log("Screen size     : " + std::to_string(app.screen_height) + ":" + std::to_string(app.screen_width));
+    save_log("----------------------------------------------------------");
 }
 
+void init(int argc, char* argv[]) {
+    init_curses();
+    init_theme();
+    init_prog(argc, argv);
+}
+
+void main_loop() {
+    ev_hndr.init(&app);
+	ev_hndr.init_table_sigs();
+	ev_hndr.set_sleep_time(1000);
+	ev_hndr.start();
+    usleep(5000);
+
+    ev_hndr.send_sig(SIGS::SIG_REFRESH_SCREEN);
+
+	while (!app.ex)
+        ev_hndr.extract_sig();
+}
 
 #endif

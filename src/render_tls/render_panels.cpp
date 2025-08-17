@@ -11,10 +11,15 @@ void recalc_bufs(AppState* ptr_app)
     }
 }
 
+void updates_buf_panels(AppState* ptr_app) {
+    ptr_app->buf_panels.clear();
+    ptr_app->tree_panels.get_childs(ptr_app->buf_panels);
+    ptr_app->count_panels = ptr_app->buf_panels.size();
+}
+
 void sep_ver(AppState* ptr_app)
 {
     Panel sep_panel = ptr_app->buf_panels[ptr_app->active_panel];
-
     Panel left_panel;
     Panel right_panel;
     short y = sep_panel.get_panel().spos.y;
@@ -23,11 +28,7 @@ void sep_ver(AppState* ptr_app)
     short szX = sep_panel.get_panel().size.x/2;
     left_panel.set_panel({ {y,x}, {szY, szX} });
     right_panel.set_panel({ {y,x+szX}, {szY, szX+sep_panel.get_panel().size.x%2} });
-    
-    ptr_app->tree_panels.push_child(sep_panel.get_id(), left_panel, right_panel);
-    ptr_app->buf_panels.clear();
-    ptr_app->tree_panels.get_child(ptr_app->buf_panels);
-    ptr_app->count_panels = ptr_app->buf_panels.size();
+    ptr_app->tree_panels.push_child(sep_panel, left_panel, right_panel);
 }
 
 void sep_hor(AppState* ptr_app)
@@ -42,11 +43,7 @@ void sep_hor(AppState* ptr_app)
     short szX = sep_panel.get_panel().size.x;
     top_panel.set_panel({ {y,x}, {szY, szX} });
     bottom_panel.set_panel({ {y+szY,x}, {szY+sep_panel.get_panel().size.y%2, szX} });
-    
-    ptr_app->tree_panels.push_child(sep_panel.get_id(), top_panel, bottom_panel);
-    ptr_app->buf_panels.clear();
-    ptr_app->tree_panels.get_child(ptr_app->buf_panels);
-    ptr_app->count_panels = ptr_app->buf_panels.size();
+    ptr_app->tree_panels.push_child(sep_panel, top_panel, bottom_panel);
 }
 
 void calc_size_panel(AppState* ptr_app)
