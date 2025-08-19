@@ -49,7 +49,7 @@ public:
     void send_queue_sigs(int* sig) { 
         locker.lock();
         int i = 0;
-        for (int isig = sig[i]; isig != SIGS::END_SIGS; isig = sig[i])
+        for (int isig = sig[i]; isig != SIGNAL::END; isig = sig[i])
         {
             if (q_sig.empty() || q_sig.back() != isig)
                 q_sig.push(isig);
@@ -71,7 +71,7 @@ private:
     __useconds_t sleep_time;
     AppState* user_data;
     std::queue<int> q_sig;
-    proc_sig* table_proc;
+    _proc_sig_* table_proc;
     std::mutex locker;
 };
 

@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-#define COLOR_PAIR_FRAME        1
+#define COLOR_PAIR_ACT_PANEL    1
 #define COLOR_PAIR_CURSOR       2
 #define COLOR_PAIR_TEXT         3
-#define COLOR_PAIR_ACT_PANEL    4
+#define COLOR_PAIR_FRAME        4
 #define COLOR_PAIR_ICON         5
 
 #define FRAME_BASE      {L'│', L'│', L'─', L'─', L'╭', L'╮', L'╰', L'╯'}

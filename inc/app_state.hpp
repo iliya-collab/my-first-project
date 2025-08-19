@@ -19,6 +19,9 @@ typedef struct {
 
     int count_panels;
     int active_panel;
+    int active_buf;
+
+    int mode;
 } AppState;
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "app_state.hpp"
 
-void calc_size_panel(AppState* ptr_app);
+//void calc_size_panel(AppState* ptr_app);
 
 void render_panel(AppState* ptr_app, Panel pl);
 
@@ -20,6 +20,10 @@ void sep_hor(AppState* ptr_app);
 void recalc_bufs(AppState* ptr_app);
 
 void updates_buf_panels(AppState* ptr_app);
+
+void move_nbuf(AppState* ptr_app, Panel pl);
+
+int get_active_index(AppState* ptr_app, int nbuf);
 
 /*void render_dirs(yx pos, FSPanel fspanel);
 void render_fspanel(FSPanel fspanel);

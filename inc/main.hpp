@@ -7,7 +7,7 @@
 #include "sigs/event_handler.hpp"
 #include "render_tls/render_tls_panel.hpp"
 
-EventHandler ev_hndr;
+EventHandler event;
 
 AppState app = {};
 
@@ -34,11 +34,11 @@ int init_curses() {
 }
 
 void init_theme() {
-    init_pair(COLOR_PAIR_TEXT,      75, 0);
-	init_pair(COLOR_PAIR_FRAME,     81, 0);
-	init_pair(COLOR_PAIR_CURSOR,    190, 0);
-	init_pair(COLOR_PAIR_ACT_PANEL, 31, 0);
-	init_pair(COLOR_PAIR_ICON,      184, 0);
+    init_pair(COLOR_PAIR_TEXT,          75, 0);
+	init_pair(COLOR_PAIR_ACT_PANEL,     81, 0);
+	init_pair(COLOR_PAIR_CURSOR,        190, 0);
+	init_pair(COLOR_PAIR_FRAME,         31, 0);
+	init_pair(COLOR_PAIR_ICON,          184, 0);
 }
 
 void init_prog(int argc, char* argv[]) {
@@ -70,16 +70,16 @@ void init(int argc, char* argv[]) {
 }
 
 void main_loop() {
-    ev_hndr.init(&app);
-	ev_hndr.init_table_sigs();
-	ev_hndr.set_sleep_time(1000);
-	ev_hndr.start();
+    event.init(&app);
+	event.init_table_sigs();
+	event.set_sleep_time(1000);
+	event.start();
     usleep(5000);
 
-    ev_hndr.send_sig(SIGS::SIG_REFRESH_SCREEN);
+    event.send_sig(SIGNAL::REFRESH_SCREEN);
 
 	while (!app.ex)
-        ev_hndr.extract_sig();
+        event.extract_sig();
 }
 
 #endif

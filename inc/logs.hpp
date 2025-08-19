@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#define LOGFILE "../logs.txt"
+#define LOGFILE "../.runtimes.log"
 
 void clear_log();
 void save_log(std::string msg);
