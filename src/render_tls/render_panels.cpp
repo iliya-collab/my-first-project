@@ -69,15 +69,44 @@ void render_panel(AppState* ptr_app, Panel pl)
     short color = (pl.nbuf == ptr_app->active_buf) ? COLOR_PAIR_ACT_PANEL : COLOR_PAIR_FRAME;
     clear_area(ptr_app->back_buf, pl.get_panel(), color);
     frame(ptr_app->back_buf, FRAME, pl.get_panel(), color);
-    std::string title = "<"+std::to_string(pl.nbuf)+":"+std::to_string(pl.get_id())+">";
-    puts_str(ptr_app->back_buf, {pl.get_panel().spos.y, pl.get_panel().spos.x+2}, STWS(title), color);
+    std::string title = "<"+std::to_string(pl.nbuf)+">"+pl.get_class_name();
+    puts_str(ptr_app->back_buf, {pl.get_panel().spos.y, pl.get_panel().spos.x+2}, s2ws(title), color);
+}
+
+static void handle_normal_mode(AppState* ptr_app) {
+    for (auto next_panel = ptr_app->buf_panels.begin(); next_panel != ptr_app->buf_panels.end(); ++next_panel) {
+        render_panel(ptr_app, (*next_panel));
+    }
+}
+
+static void handle_settings_mode(AppState* ptr_app) {
+    clear_area(ptr_app->back_buf, ptr_app->settings.get_panel(), COLOR_PAIR_SETTINGS_MODE);
+    frame(ptr_app->back_buf, FRAME, ptr_app->settings.get_panel(), COLOR_PAIR_SETTINGS_MODE);
+    std::wstring title = L"  Settings  ";
+    puts_str(ptr_app->back_buf, {0, ptr_app->settings.get_panel().size.x/2-(int)title.size()}, title, COLOR_PAIR_SETTINGS_MODE);
+
+    int y = 1;
+    puts_str(ptr_app->back_buf, {++y, 2}, L"Buffer : " + std::to_wstring(ptr_app->settings.get_setup().cur_buf), COLOR_PAIR_FRAME);
+    puts_str(ptr_app->back_buf, {++y, 2}, L"Class : " + s2ws(ptr_app->settings.get_setup().class_buf), COLOR_PAIR_FRAME);
+    puts_str(ptr_app->back_buf, {++y, 2}, L"Mode hard cursor : " + std::to_wstring(ptr_app->settings.get_setup().mode_hard_cursor), COLOR_PAIR_FRAME);
 }
 
 void refresh_screen(AppState* ptr_app)
 {
-    for (auto next_panel = ptr_app->buf_panels.begin(); next_panel != ptr_app->buf_panels.end(); ++next_panel) {
-        render_panel(ptr_app, (*next_panel));
+    switch (ptr_app->mode)
+    {
+    case MODE::NORMAL:
+        handle_normal_mode(ptr_app);
+        break;
+    
+    case MODE::SETTINGS:
+        handle_settings_mode(ptr_app);
+        break;
+
+    default:
+        break;
     }
+   
     copywin(ptr_app->back_buf, stdscr, 0, 0, 0, 0, ptr_app->screen_height - 1, ptr_app->screen_width - 1, 0);
     refresh();
 }
@@ -103,5 +132,4 @@ void move_nbuf(AppState* ptr_app, Panel pl)
         swap_nbuf(ptr_app->buf_panels[0], ptr_app->buf_panels[ptr_app->active_panel]);
     else 
         swap_nbuf(ptr_app->buf_panels[ptr_app->active_panel], ptr_app->buf_panels[ptr_app->active_panel + 1]);
-    //std::sort(ptr_app->buf_panels.begin(), ptr_app->buf_panels.end(), sort_nbuf);
 }

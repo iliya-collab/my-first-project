@@ -2,10 +2,10 @@
 #define _MAIN_
 
 #include <locale.h>
-#include <math.h>
 
 #include "sigs/event_handler.hpp"
 #include "render_tls/render_tls_panel.hpp"
+#include "logs.hpp"
 
 EventHandler event;
 
@@ -39,13 +39,18 @@ void init_theme() {
 	init_pair(COLOR_PAIR_CURSOR,        190, 0);
 	init_pair(COLOR_PAIR_FRAME,         31, 0);
 	init_pair(COLOR_PAIR_ICON,          184, 0);
+    init_pair(COLOR_PAIR_SETTINGS_MODE, 202, 0);
 }
 
 void init_prog(int argc, char* argv[]) {
+    app.mode = MODE::NORMAL;
+    app.mode_hard_cursor = 0;
     if (argc < 2)
         app.q_err.push({ .code = -1, .msg = "To run the program, you need to pass the parameters" });
     app.active_panel = 0;
     
+    app.settings.set_panel( {{0,0}, {app.screen_height, app.screen_width}} );
+
     Panel root_panel;
     root_panel.set_panel( {{0,0}, {app.screen_height, app.screen_width}} );
     app.cursor = { root_panel.get_panel().spos.y+1, root_panel.get_panel().spos.x+1 };

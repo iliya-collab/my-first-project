@@ -3,9 +3,7 @@
 
 #include "panel.hpp"
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <vector>
 
 #define Kb  1024
 
@@ -16,8 +14,7 @@ public:
         class_name = "vispanel";
     }
 
-    void calc_max_offset_panel();
-
+    
     void set_size_swap(uint64_t size) { max_size_swap_file = size; }
     std::string get_file() { return file; }
     void set_file(std::string path) { file = path; }
@@ -32,9 +29,11 @@ public:
     void remove_all_swap_files()
     {
         for (auto sfile : lst_swap_files)
-            std::remove(sfile.c_str());
+        std::remove(sfile.c_str());
     }
+    
     char* buffer;
+    void calc_max_offset_panel();
 
 private:
 

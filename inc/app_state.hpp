@@ -2,8 +2,15 @@
 #define _GLOB_VARS_
 
 #include "panel/tree/tree.hpp"
+#include "panel/settings_panel.hpp"
 
 #include <queue>
+#include <vector>
+
+enum MODE {
+    SETTINGS,
+    NORMAL
+};
 
 typedef struct {
     WINDOW* back_buf;
@@ -13,6 +20,7 @@ typedef struct {
 
     Tree tree_panels;
     std::vector<Panel> buf_panels;
+    SettingsPanel settings;
 
     int screen_height;
     int screen_width;
@@ -22,6 +30,7 @@ typedef struct {
     int active_buf;
 
     int mode;
+    bool mode_hard_cursor;
 } AppState;
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef _EVENT_
 #define _EVENT_
 
-#include <vector>
-
 #include "sigs.hpp"
 
 typedef int (*_proc_sig_)(void*);
@@ -31,6 +29,10 @@ namespace proc_sig {
     int close_panel(void* user_data);
     int refresh_cursor(void* user_data);
     int move_buffer(void* user_data);
-
+    int settings_mode(void* user_data);
+    int normal_mode(void* user_data);
+    int edit_item_up(void* user_data);
+    int edit_item_down(void* user_data);
+    int save_settings(void* user_data);
 }
 #endif

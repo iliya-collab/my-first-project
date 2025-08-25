@@ -1,5 +1,9 @@
 #include "panel/vispanel.hpp"
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 /*void VISPanel::calc_max_offset_panel()
 {
     int voffset = buf_file.size()-pi.size.y+3;

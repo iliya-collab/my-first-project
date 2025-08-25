@@ -1,5 +1,6 @@
 #include "sigs/event_handler.hpp"
 #include "render_tls/render_tls_panel.hpp"
+#include "logs.hpp"
 
 int proc_sig::exit(void* user_data) 
 { 
@@ -59,32 +60,48 @@ int proc_sig::send_resize(void* user_data)
 int proc_sig::cursor_up(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->cursor.y > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y+1)
-        ptr_app->cursor.y--;
+    if (ptr_app->mode == MODE::NORMAL)
+        if (ptr_app->cursor.y > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y+1)
+            ptr_app->cursor.y--;
+    if (ptr_app->mode == MODE::SETTINGS)
+        if (ptr_app->cursor.y > ptr_app->settings.get_panel().spos.y+1)
+            ptr_app->cursor.y--;
     return SIGNAL::END;
 }
 
 int proc_sig::cursor_down(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->cursor.y < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.y-2)
-        ptr_app->cursor.y++;
+    if (ptr_app->mode == MODE::NORMAL)
+        if (ptr_app->cursor.y < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.y-2)
+            ptr_app->cursor.y++;
+    if (ptr_app->mode == MODE::SETTINGS)
+        if (ptr_app->cursor.y < ptr_app->settings.get_panel().spos.y + ptr_app->settings.get_panel().size.y-2)
+            ptr_app->cursor.y++;
     return SIGNAL::END;
 }
 
 int proc_sig::cursor_left(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->cursor.x > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x+1)
-        ptr_app->cursor.x--;
+    if (ptr_app->mode == MODE::NORMAL)
+        if (ptr_app->cursor.x > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x+1)
+            ptr_app->cursor.x--;
+    if (ptr_app->mode == MODE::SETTINGS)
+        if (ptr_app->cursor.x > ptr_app->settings.get_panel().spos.x+1)
+            ptr_app->cursor.x--;
     return SIGNAL::END;
 }
 
 int proc_sig::cursor_right(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->cursor.x < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.x-1)
-        ptr_app->cursor.x++;
+    if (ptr_app->mode == MODE::NORMAL)
+        if (ptr_app->cursor.x < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.x-1)
+            ptr_app->cursor.x++;
+    if (ptr_app->mode == MODE::SETTINGS)
+        if (ptr_app->cursor.x < ptr_app->settings.get_panel().spos.x + ptr_app->settings.get_panel().size.x-1)
+            ptr_app->cursor.x++;
     return SIGNAL::END;
 }
 
@@ -255,5 +272,97 @@ int proc_sig::move_buffer(void* user_data)
     move_nbuf(ptr_app, pl);
     ptr_app->active_panel = get_active_index(ptr_app, ptr_app->active_buf);
     ptr_app->cursor = { ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y+1, ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x+1 };
+    return SIGNAL::END;
+}
+
+int proc_sig::settings_mode(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    ptr_app->mode = MODE::SETTINGS;
+    ptr_app->settings.get_setup().cur_buf = ptr_app->active_buf;
+    ptr_app->settings.get_setup().max_buf = ptr_app->count_panels-1;
+    ptr_app->settings.get_setup().class_buf = ptr_app->buf_panels[ptr_app->active_panel].get_class_name();
+    return SIGNAL::END;
+}
+
+int proc_sig::normal_mode(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    ptr_app->mode = MODE::NORMAL;
+    return SIGNAL::END;
+}
+
+static int buf = 0;
+static int _class = 0;
+
+int proc_sig::edit_item_up(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    switch (ptr_app->cursor.y) {
+        case 2:
+            if (buf < ptr_app->settings.get_setup().max_buf)
+                buf++;
+            ptr_app->settings.get_setup().cur_buf = buf;
+            break;
+        case 3:
+            if (_class < CLASS_PANEL::END_CLASS)
+            {
+                _class++;
+                switch (_class)
+                {
+                case CLASS_PANEL::NON:
+                    ptr_app->settings.get_setup().class_buf = "Non";
+                    break;
+                case CLASS_PANEL::FSPANEL:
+                    ptr_app->settings.get_setup().class_buf = "fspanel";
+                    break;
+                case CLASS_PANEL::VISPANEL:
+                    ptr_app->settings.get_setup().class_buf = "vispanel";
+                    break;
+                }
+            }
+            break;
+        case 4:
+            ptr_app->settings.get_setup().mode_hard_cursor = true;
+            break;
+    }
+    return SIGNAL::END;
+}
+
+int proc_sig::edit_item_down(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    switch (ptr_app->cursor.y) {
+        case 2:
+            if (buf > 0)
+                buf--;
+            ptr_app->settings.get_setup().cur_buf = buf;
+            break;
+        case 3:
+            if (_class > 0)
+            {
+                _class--;
+                switch (_class)
+                {
+                case CLASS_PANEL::NON:
+                    ptr_app->settings.get_setup().class_buf = "Non";
+                    break;
+                case CLASS_PANEL::FSPANEL:
+                    ptr_app->settings.get_setup().class_buf = "fspanel";
+                    break;
+                case CLASS_PANEL::VISPANEL:
+                    ptr_app->settings.get_setup().class_buf = "vispanel";
+                    break;
+                }
+            }
+            break;
+        case 4:
+            ptr_app->settings.get_setup().mode_hard_cursor = false;
+            break;
+    }
+    return SIGNAL::END;
+}
+
+int proc_sig::save_settings(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    auto cur_settings = ptr_app->settings.get_setup();
+    ptr_app->buf_panels[get_active_index(ptr_app, cur_settings.cur_buf)].get_class_name() = cur_settings.class_buf;
+    ptr_app->mode_hard_cursor = cur_settings.mode_hard_cursor;
     return SIGNAL::END;
 }

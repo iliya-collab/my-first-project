@@ -2,19 +2,14 @@
 #define _RENDER_
 
 #define _XOPEN_SOURCE_EXTENDED 1
-#include <curses.h>
+#include <ncurses.h>
 #include <string>
-#include <math.h>
-#include <cstring>
-#include <locale>
-#include <codecvt>
 
-std::wstring s2ws(const std::string& str);
-std::string ws2s(const std::wstring& wstr);
+std::string wstring_to_utf8(const std::wstring& str);
+std::wstring utf8_to_wstring(const std::string& str);
 
-#define STWS(str) s2ws((str))
-#define WSST(wstr) ws2s((wstr))
-
+#define s2ws(str) utf8_to_wstring((str))
+#define ws2s(wstr) wstring_to_utf8((wstr))
 
 typedef struct {
     int y;

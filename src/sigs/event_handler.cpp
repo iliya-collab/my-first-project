@@ -1,10 +1,20 @@
 #include "sigs/event_handler.hpp"
 
+#include <thread>
+#include <ncurses.h>
+#include <unistd.h>
+
+EventHandler::~EventHandler() {
+        free(table_proc);
+}
+
 int EventHandler::init(AppState* ptr_app)
 {
     user_data = ptr_app;
-    timeout(0);
+    //timeout(0);
+    nodelay(stdscr, true);
     keypad(stdscr, true);
+    meta(stdscr, true);
     return 0;
 }
 
@@ -25,6 +35,11 @@ void EventHandler::init_table_sigs()
     table_proc[SIGNAL::CLOSE_PANEL]         = proc_sig::close_panel;
     table_proc[SIGNAL::REFRESH_CURSOR]      = proc_sig::refresh_cursor;
     table_proc[SIGNAL::MOVE_BUFFER]         = proc_sig::move_buffer;
+    table_proc[SIGNAL::SETTINGS_MODE]       = proc_sig::settings_mode;
+    table_proc[SIGNAL::NORMAL_MODE]         = proc_sig::normal_mode;
+    table_proc[SIGNAL::EDIT_ITEM_UP]        = proc_sig::edit_item_up;
+    table_proc[SIGNAL::EDIT_ITEM_DOWN]      = proc_sig::edit_item_down;
+    table_proc[SIGNAL::SAVE_SETTINGS]       = proc_sig::save_settings;
 }
 
 void EventHandler::regular_sig()
@@ -39,6 +54,18 @@ void EventHandler::regular_sig()
         q_sig.push(SIGNAL::REFRESH_SCREEN);
     }
 }
+
+void EventHandler::process_alt_combination(int first_char) {
+    char combination[32];
+    snprintf(combination, sizeof(combination), "Alt+%c", first_char);
+    
+    switch(tolower(first_char)) {
+        case 's':
+            q_sig.push(SIGNAL::SAVE_SETTINGS);
+            break;
+    }
+}
+
 
 void EventHandler::keyboard_sig()
 {
@@ -79,12 +106,25 @@ void EventHandler::keyboard_sig()
         break;
 
     case 'i':
-        q_sig.push(SIGNAL::OFFSET_PANEL_UP);
-        q_sig.push(SIGNAL::REFRESH_SCREEN);
+        if (user_data->mode == MODE::NORMAL) {
+            q_sig.push(SIGNAL::OFFSET_PANEL_UP);
+            q_sig.push(SIGNAL::REFRESH_SCREEN);
+        }
+        if (user_data->mode == MODE::SETTINGS) {
+            q_sig.push(SIGNAL::EDIT_ITEM_UP);
+            q_sig.push(SIGNAL::REFRESH_SCREEN);
+        }
         break;
     case 'k':
-        q_sig.push(SIGNAL::OFFSET_PANEL_DOWN);
-        q_sig.push(SIGNAL::REFRESH_SCREEN);
+        if (user_data->mode == MODE::NORMAL) {
+            q_sig.push(SIGNAL::OFFSET_PANEL_DOWN);
+            q_sig.push(SIGNAL::REFRESH_SCREEN);
+        }
+        if (user_data->mode == MODE::SETTINGS) {
+            q_sig.push(SIGNAL::EDIT_ITEM_DOWN);
+            q_sig.push(SIGNAL::REFRESH_SCREEN);
+        }
+
         break;
     
     case '\t':
@@ -113,6 +153,28 @@ void EventHandler::keyboard_sig()
         q_sig.push(SIGNAL::REFRESH_SCREEN);
         break;
 
+    case KEY_F(1):
+        q_sig.push(SIGNAL::NORMAL_MODE);
+        q_sig.push(SIGNAL::REFRESH_CURSOR);
+        q_sig.push(SIGNAL::REFRESH_SCREEN);
+        break;
+
+    case KEY_F(2):
+        q_sig.push(SIGNAL::SETTINGS_MODE);
+        q_sig.push(SIGNAL::REFRESH_CURSOR);
+        q_sig.push(SIGNAL::REFRESH_SCREEN);
+        break;
+
+    case 27: {
+        int second_char = getch();
+        if (second_char == ERR) {
+            break;
+        }
+        else
+            process_alt_combination(second_char);
+        break;
+    }
+
     default:
         break;
     }
@@ -124,6 +186,7 @@ void EventHandler::extract_sig()
     if (!q_sig.empty())
     {
         locker.lock();
+        //save_log("Extract : " + std::to_string(q_sig.front()));
         int ret_sig = table_proc[q_sig.front()](user_data);
         if (ret_sig == SIGNAL::END)
             q_sig.pop();
@@ -134,4 +197,44 @@ void EventHandler::extract_sig()
         }
         locker.unlock();
     }
+}
+
+void EventHandler::start() {
+        auto lamb = [this](){
+            while (!user_data->ex)
+            {
+                usleep(sleep_time);
+                if (q_sig.empty())
+                {
+                    locker.lock();
+                    regular_sig();
+                    keyboard_sig();
+                    /*if (!q_sig.empty())
+                        save_log("Send : " + std::to_string(q_sig.front()));*/
+                    locker.unlock();
+                }
+            }
+	    };
+	
+        std::thread th(lamb);
+        th.detach();
+}
+
+void EventHandler::send_sig(int sig) { 
+    locker.lock();
+    if (q_sig.empty() || q_sig.back() != sig)
+        q_sig.push(sig);
+    locker.unlock(); 
+}
+
+void EventHandler::send_queue_sigs(int* sig) { 
+    locker.lock();
+    int i = 0;
+    for (int isig = sig[i]; isig != SIGNAL::END; isig = sig[i])
+    {
+        if (q_sig.empty() || q_sig.back() != isig)
+            q_sig.push(isig);
+        i++;
+    }
+    locker.unlock(); 
 }

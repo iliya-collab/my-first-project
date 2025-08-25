@@ -1,16 +1,32 @@
 #include "render_tls/render.hpp"
 
-std::wstring s2ws(const std::string& str)
-{
-    using convert_typeX = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-    return converterX.from_bytes(str);
+#include <math.h>
+#include <cstring>
+#include <locale>
+#include <codecvt>
+
+std::string wstring_to_utf8(const std::wstring& wstr) {
+    std::locale loc("en_US.UTF-8");
+    auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
+    std::string result(wstr.size() * facet.max_length(), '\0');
+    std::mbstate_t state = std::mbstate_t();
+    const wchar_t* from_next;
+    char* to_next;
+    facet.out(state, wstr.data(), wstr.data() + wstr.size(), from_next, &result[0], &result[0] + result.size(), to_next);
+    result.resize(to_next - &result[0]);
+    return result;
 }
-std::string ws2s(const std::wstring& wstr)
-{
-    using convert_typeX = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-    return converterX.to_bytes(wstr);
+
+std::wstring utf8_to_wstring(const std::string& str) {
+    std::locale loc("en_US.UTF-8");
+    auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
+    std::wstring result(str.size(), L'\0');
+    std::mbstate_t state = std::mbstate_t();
+    const char* from_next;
+    wchar_t* to_next;
+    facet.in(state, str.data(), str.data() + str.size(), from_next, &result[0], &result[0] + result.size(), to_next);
+    result.resize(to_next - &result[0]);
+    return result;
 }
 
 void hor_line(WINDOW* win, yx spos, int width, line ln, short color_pair)
