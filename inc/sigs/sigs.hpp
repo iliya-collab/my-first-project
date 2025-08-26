@@ -3,20 +3,23 @@
 
 enum SIGNAL {
 
-    EXIT,
-    CURSOR_UP,
-    CURSOR_DOWN,
-    CURSOR_LEFT,
-    CURSOR_RIGHT,
+    EXIT,                   // Выход из программы
+    ERROR,                  // Ошибка в программе
+
+    CURSOR_UP,              // Переместить курсор вверх
+    CURSOR_DOWN,            // Переместить курсор вниз
+    CURSOR_LEFT,            // Переместить курсор влево
+    CURSOR_RIGHT,           // Переместить курсор вправо
+    REFRESH_CURSOR,         // Обновление информации о курсоре
+
     OFFSET_PANEL_UP,
     OFFSET_PANEL_DOWN,
     OFFSET_PANEL_LEFT,
     OFFSET_PANEL_RIGHT,
-    REFRESH_CURSOR,
+
     CLOSE_PANEL,
     REFRESH_SCREEN,
     CHANGE_PANEL,
-    ERROR,
     RESIZE_WIN,
     VER_SEPARATION,
     HOR_SEPARATION,

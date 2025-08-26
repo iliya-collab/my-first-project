@@ -3,8 +3,6 @@
 
 #include "panel/panel.hpp"
 
-
-
 class SettingsPanel : public Panel {
 
 private:

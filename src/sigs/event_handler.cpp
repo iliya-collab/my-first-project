@@ -3,9 +3,10 @@
 #include <thread>
 #include <ncurses.h>
 #include <unistd.h>
+#include <sstream>
 
 EventHandler::~EventHandler() {
-        free(table_proc);
+    free(table_proc);
 }
 
 int EventHandler::init(AppState* ptr_app)
@@ -56,14 +57,15 @@ void EventHandler::regular_sig()
 }
 
 void EventHandler::process_alt_combination(int first_char) {
-    char combination[32];
-    snprintf(combination, sizeof(combination), "Alt+%c", first_char);
+    /*char combination[32];
+    snprintf(combination, sizeof(combination), "Alt+%c", first_char);*/
+    std::stringstream ss;
+    ss << "Alt+" << (char)first_char;
+    std::string combination;
+    ss >> combination;
     
-    switch(tolower(first_char)) {
-        case 's':
-            q_sig.push(SIGNAL::SAVE_SETTINGS);
-            break;
-    }
+    if (combination == "Alt+s")
+        q_sig.push(SIGNAL::SAVE_SETTINGS);
 }
 
 

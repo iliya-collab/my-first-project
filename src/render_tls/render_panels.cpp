@@ -1,5 +1,6 @@
 #include "app_state.hpp"
 #include <algorithm>
+#include <sstream>
 
 static bool sort_nbuf(Panel pl1, Panel pl2) { return pl1.nbuf < pl2.nbuf; }
 
@@ -85,10 +86,14 @@ static void handle_settings_mode(AppState* ptr_app) {
     std::wstring title = L"  Settings  ";
     puts_str(ptr_app->back_buf, {0, ptr_app->settings.get_panel().size.x/2-(int)title.size()}, title, COLOR_PAIR_SETTINGS_MODE);
 
+    std::wstringstream ss;
+    std::wstring wstr;
     int y = 1;
-    puts_str(ptr_app->back_buf, {++y, 2}, L"Buffer : " + std::to_wstring(ptr_app->settings.get_setup().cur_buf), COLOR_PAIR_FRAME);
-    puts_str(ptr_app->back_buf, {++y, 2}, L"Class : " + s2ws(ptr_app->settings.get_setup().class_buf), COLOR_PAIR_FRAME);
-    puts_str(ptr_app->back_buf, {++y, 2}, L"Mode hard cursor : " + std::to_wstring(ptr_app->settings.get_setup().mode_hard_cursor), COLOR_PAIR_FRAME);
+    auto cur_settings = ptr_app->settings.get_setup();
+
+    puts_str(ptr_app->back_buf, {++y, 2}, L"Buffer : " + std::to_wstring(cur_settings.cur_buf), COLOR_PAIR_FRAME);
+    puts_str(ptr_app->back_buf, {++y, 2}, L"Class : " + s2ws(cur_settings.class_buf), COLOR_PAIR_FRAME);
+    puts_str(ptr_app->back_buf, {++y, 2}, std::wstring(L"Mode hard cursor : ") + ((cur_settings.mode_hard_cursor) ? L"true" : L"false"), COLOR_PAIR_FRAME);
 }
 
 void refresh_screen(AppState* ptr_app)

@@ -13,10 +13,16 @@ enum MODE {
 };
 
 typedef struct {
+    yx pos;
+    yx min_pos;
+    yx max_pos;
+} pos_cursor;
+
+typedef struct {
     WINDOW* back_buf;
     bool ex;
     std::queue<Error> q_err;
-    yx cursor;
+    pos_cursor cursor;
 
     Tree tree_panels;
     std::vector<Panel> buf_panels;

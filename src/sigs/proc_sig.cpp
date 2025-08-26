@@ -2,19 +2,19 @@
 #include "render_tls/render_tls_panel.hpp"
 #include "logs.hpp"
 
-int proc_sig::exit(void* user_data) 
-{ 
+// Выход из программы 
+int proc_sig::exit(void* user_data) { 
     AppState* ptr_app = (AppState*)user_data;
-
     ptr_app->ex = true; 
     delwin(ptr_app->back_buf);
 	endwin();
-    
     return SIGNAL::END;
 }
 
-int proc_sig::error(void* user_data) 
-{
+// *** Процедуры обработки ошибок ***
+// --------------------------------------------------------------------------
+// Обработка ошибок
+int proc_sig::error(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
     int ret_sig = SIGNAL::END;
     while (!ptr_app->q_err.empty())
@@ -33,17 +33,20 @@ int proc_sig::error(void* user_data)
     }
     return ret_sig;
 }
-
-int proc_sig::send_error(void* user_data)
-{
+// Отпавить сигнал о ошибоке
+int proc_sig::send_error(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
     if (!ptr_app->q_err.empty())
         return SIGNAL::ERROR;
     return SIGNAL::END;
 }
+// *** ***
+// --------------------------------------------------------------------------
 
-int proc_sig::send_resize(void* user_data)
-{
+// *** Процедуры обработки изменения размера экрана ***
+// --------------------------------------------------------------------------
+// Отпавить сигнал о изменении размера
+int proc_sig::send_resize(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
     int new_screen_height = 0;
     int new_screen_width = 0;
@@ -56,54 +59,51 @@ int proc_sig::send_resize(void* user_data)
     }
     return SIGNAL::END;
 }
-
-int proc_sig::cursor_up(void* user_data)
-{
+// бработка ошибок изменении размера
+int proc_sig::resize_win(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->mode == MODE::NORMAL)
-        if (ptr_app->cursor.y > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y+1)
-            ptr_app->cursor.y--;
-    if (ptr_app->mode == MODE::SETTINGS)
-        if (ptr_app->cursor.y > ptr_app->settings.get_panel().spos.y+1)
-            ptr_app->cursor.y--;
+    clear();
+    endwin();
+    refresh();
+    resizeterm(ptr_app->screen_height, ptr_app->screen_width);
+    clear_area(ptr_app->back_buf, {{0,0}, {ptr_app->screen_height-1, ptr_app->screen_width-1}}, COLOR_PAIR_FRAME);
     return SIGNAL::END;
 }
+// *** ***
+// --------------------------------------------------------------------------
 
-int proc_sig::cursor_down(void* user_data)
-{
+// *** Процедуры обработки курсора ***
+// --------------------------------------------------------------------------
+// Вверх
+int proc_sig::cursor_up(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->mode == MODE::NORMAL)
-        if (ptr_app->cursor.y < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.y-2)
-            ptr_app->cursor.y++;
-    if (ptr_app->mode == MODE::SETTINGS)
-        if (ptr_app->cursor.y < ptr_app->settings.get_panel().spos.y + ptr_app->settings.get_panel().size.y-2)
-            ptr_app->cursor.y++;
+    if (ptr_app->cursor.pos.y > ptr_app->cursor.min_pos.y)
+        ptr_app->cursor.pos.y--;
     return SIGNAL::END;
 }
-
-int proc_sig::cursor_left(void* user_data)
-{
+// Вниз
+int proc_sig::cursor_down(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->mode == MODE::NORMAL)
-        if (ptr_app->cursor.x > ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x+1)
-            ptr_app->cursor.x--;
-    if (ptr_app->mode == MODE::SETTINGS)
-        if (ptr_app->cursor.x > ptr_app->settings.get_panel().spos.x+1)
-            ptr_app->cursor.x--;
+    if (ptr_app->cursor.pos.y < ptr_app->cursor.max_pos.y)
+    ptr_app->cursor.pos.y++;
     return SIGNAL::END;
 }
-
-int proc_sig::cursor_right(void* user_data)
-{
+// Влево
+int proc_sig::cursor_left(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    if (ptr_app->mode == MODE::NORMAL)
-        if (ptr_app->cursor.x < ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x + ptr_app->buf_panels[ptr_app->active_panel].get_panel().size.x-1)
-            ptr_app->cursor.x++;
-    if (ptr_app->mode == MODE::SETTINGS)
-        if (ptr_app->cursor.x < ptr_app->settings.get_panel().spos.x + ptr_app->settings.get_panel().size.x-1)
-            ptr_app->cursor.x++;
+    if (ptr_app->cursor.pos.x > ptr_app->cursor.min_pos.x)
+    ptr_app->cursor.pos.x--;
     return SIGNAL::END;
 }
+// Вправо
+int proc_sig::cursor_right(void* user_data) {
+    AppState* ptr_app = (AppState*)user_data;
+    if (ptr_app->cursor.pos.x < ptr_app->cursor.max_pos.x)
+    ptr_app->cursor.pos.x++;
+    return SIGNAL::END;
+}
+// *** ***
+// --------------------------------------------------------------------------
 
 /*void proc_offset_panel_up()
 {
@@ -201,21 +201,9 @@ void proc_change_workdir_up()
     }
 }*/
 
-int proc_sig::refresh_screen(void* user_data)
-{
+int proc_sig::refresh_screen(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
     refresh_screen(ptr_app);
-    return SIGNAL::END;
-}
-
-int proc_sig::resize_win(void* user_data)
-{
-    AppState* ptr_app = (AppState*)user_data;
-    clear();
-    endwin();
-    refresh();
-    resizeterm(ptr_app->screen_height, ptr_app->screen_width);
-    clear_area(ptr_app->back_buf, {{0,0}, {ptr_app->screen_height-1, ptr_app->screen_width-1}}, COLOR_PAIR_FRAME);
     return SIGNAL::END;
 }
 
@@ -226,14 +214,38 @@ int proc_sig::change_panel(void* user_data)
         ptr_app->active_buf++;
     else ptr_app->active_buf = 0;
     ptr_app->active_panel = get_active_index(ptr_app, ptr_app->active_buf);
-    ptr_app->cursor = { ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.y+1, ptr_app->buf_panels[ptr_app->active_panel].get_panel().spos.x+1 };
+
+    auto cur_panel = ptr_app->buf_panels[ptr_app->active_panel].get_panel();
+    if (ptr_app->mode_hard_cursor == true) 
+    ptr_app->cursor.pos = { cur_panel.spos.y + 1, cur_panel.spos.x + 1 };
+    
     return SIGNAL::END;
 }
 
 int proc_sig::refresh_cursor(void* user_data)
 {
     AppState* ptr_app = (AppState*)user_data;
-    move(ptr_app->cursor.y, ptr_app->cursor.x);
+    if (ptr_app->mode_hard_cursor == true)
+    {
+        auto cur_panel = ptr_app->buf_panels[ptr_app->active_panel].get_panel();
+        switch (ptr_app->mode)
+        {
+        case MODE::NORMAL:
+            ptr_app->cursor.min_pos = { cur_panel.spos.y + 1, cur_panel.spos.x + 1 };
+            ptr_app->cursor.max_pos = { cur_panel.spos.y + cur_panel.size.y - 2, cur_panel.spos.x + cur_panel.size.x - 2 };
+            break;
+        case MODE::SETTINGS:
+            ptr_app->cursor.min_pos = { 1, 1 };
+            ptr_app->cursor.max_pos = { ptr_app->screen_height - 2, ptr_app->screen_width - 2 };
+            break;
+        }
+    }
+    else
+    {
+        ptr_app->cursor.min_pos = { 1, 1 };
+        ptr_app->cursor.max_pos = { ptr_app->screen_height - 2, ptr_app->screen_width - 2 };
+    }
+    move(ptr_app->cursor.pos.y, ptr_app->cursor.pos.x);
     return SIGNAL::END;
 }
 
@@ -277,6 +289,7 @@ int proc_sig::move_buffer(void* user_data)
 
 int proc_sig::settings_mode(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
+    ptr_app->cursor.pos = { 1, 1 };
     ptr_app->mode = MODE::SETTINGS;
     ptr_app->settings.get_setup().cur_buf = ptr_app->active_buf;
     ptr_app->settings.get_setup().max_buf = ptr_app->count_panels-1;
@@ -286,6 +299,8 @@ int proc_sig::settings_mode(void* user_data) {
 
 int proc_sig::normal_mode(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
+    auto cur_panel = ptr_app->buf_panels[ptr_app->active_panel].get_panel();
+    ptr_app->cursor.pos = { cur_panel.spos.y + 1, cur_panel.spos.x + 1 };
     ptr_app->mode = MODE::NORMAL;
     return SIGNAL::END;
 }
@@ -295,7 +310,7 @@ static int _class = 0;
 
 int proc_sig::edit_item_up(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    switch (ptr_app->cursor.y) {
+    switch (ptr_app->cursor.pos.y) {
         case 2:
             if (buf < ptr_app->settings.get_setup().max_buf)
                 buf++;
@@ -328,7 +343,7 @@ int proc_sig::edit_item_up(void* user_data) {
 
 int proc_sig::edit_item_down(void* user_data) {
     AppState* ptr_app = (AppState*)user_data;
-    switch (ptr_app->cursor.y) {
+    switch (ptr_app->cursor.pos.y) {
         case 2:
             if (buf > 0)
                 buf--;
